@@ -4,16 +4,21 @@ import random
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-from keras import layers, optimizers
+from keras import layers, optimizers, Sequential
+from keras.layers import Flatten
 import matplotlib.pyplot as plt
 from keras.optimizers import SGD
 
-#creating data set
-categories = ["higher","lower"]
+# python3.8以降ではDLLsを探さなくなったため記述を追加
+os.add_dll_directory(os.path.join(os.environ['CUDA_PATH'], 'bin'))
+
+# creating data set
+categories = ["higher", "lower"]
 imagedir = "learning images/"
 X_train = []
 y_train = []
 training_data = []
+
 
 def create_training_data():
     for class_num, category in enumerate(categories):
@@ -21,11 +26,12 @@ def create_training_data():
         for image_name in os.listdir(path):
             try:
                 img_array = cv2.imread(os.path.join(path, image_name), cv2.IMREAD_GRAYSCALE)  # 画像読み込み
-                #img_resize_array = cv2.resize(img_array, (80, 60))  # 画像のリサイズ
-                training_data.append([img_array, class_num])  # 画像データ、ラベル情報を追加
+                img_resize_array = cv2.resize(img_array, (80, 60))  # 画像のリサイズ
+                training_data.append([img_resize_array, class_num])  # 画像データ、ラベル情報を追加
             except Exception as e:
                 pass
-            
+
+
 create_training_data()
 
 
@@ -40,52 +46,69 @@ for feature, label in training_data:
 X_train = np.array(X_train)
 y_train = np.array(y_train)
 
+
 # データセットの確認
+"""
 for i in range(0, 4):
     print("学習データのラベル：", y_train[i])
     plt.subplot(2, 2, i+1)
     plt.axis('off')
-    plt.title(label = 'higher' if y_train[i] == 0 else 'lower')
+    plt.title(label='higher' if y_train[i] == 0 else 'lower')
     plt.imshow(X_train[i], cmap='gray')
 
 plt.show()
+"""
 
-#save the dataset
+# save the dataset
 """
 xy = (X_train, y_train)
 np.save("datasets/histgrams.npy", xy)
 """
 
-#create an empty model
-model = keras.Sequential(name="my_model")
+# create an empty model
+model = tf.keras.Sequential(name="my_model")
 
-#add layers to model
+# add layers to model
+image_sizeY = 60
+image_sizeX = 80
+input_shape = (image_sizeY, image_sizeX, 1)
 
-model.add( tf.keras.layers.Conv2D(16, (5, 5), padding="same", input_shape=(480, 640), activation="relu"))
-model.add( tf.keras.layers.MaxPooling2D)
-model.add( tf.keras.layers.Flatten )       
-model.add( tf.keras.layers.Dense(128, activation=tf.nn.relu) )   
-model.add( tf.keras.layers.Dropout(0.2) )                        
-model.add( tf.keras.layers.Dense(2, activation=tf.nn.softmax) ) 
+
+model.add(tf.keras.layers.Conv2D(128, kernel_size=5, strides=1, padding="same", activation="relu", input_shape=input_shape))
+model.add(tf.keras.layers.MaxPooling2D(2, strides=2))
+model.add(tf.keras.layers.Conv2D(256, kernel_size=5, strides=1, padding="same", activation="relu"))
+model.add(tf.keras.layers.MaxPooling2D(2, strides=2))
+model.add(tf.keras.layers.Flatten())
+model.add(tf.keras.layers.Dense(300, activation="relu"))
+model.add(tf.keras.layers.Dropout(0.1))
+model.add(tf.keras.layers.Dense(1, activation="sigmoid"))
 
 # output summary of layers
 model.summary()
 
-#compile the model
+# compile the model
 
-model.compile(optimizer='adam',
-              loss='sparse_categorical_crossentropy',
+sgd = optimizers.SGD(learning_rate=0.01,  # lr=0.01
+                     decay=1e-6,
+                     momentum=0.9,
+                     nesterov=True)
+
+
+model.compile(optimizer='sgd',
+              loss='categorical_crossentropy',
               metrics=['accuracy'])
+
 """
 opt = SGD(learning_rate=0.01)
 model.compile(loss = "categorical_crossentropy", optimizer = opt)
 """
 
-#training the model
+# training the model
 
-tmp = model.fit(X_train, y_train, validation_split=0.2, epochs=20)
+tmp = model.fit(X_train, y_train, batch_size=32,
+                validation_split=0.5, epochs=10)
 
-#show graph of the trained model
+# show graph of the trained model
 acc = tmp.history['accuracy']
 val_acc = tmp.history['val_accuracy']
 loss = tmp.history['loss']
@@ -105,14 +128,6 @@ plt.title('Training and validation loss')
 plt.show()
 plt.savefig('loss')
 
-#save the trained model
+# save the trained model
 
 model.save('trained models/model02')
-
-
-
-
-
-
-
-
