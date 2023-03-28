@@ -1,0 +1,32 @@
+model.add(tf.keras.layers.Conv2D(16,(3,3), padding='same',input_shape=input_shape))
+model.add(tf.keras.layers.Activation('relu'))
+model.add(tf.keras.layers.Conv2D(16,(3,3)))
+model.add(tf.keras.layers.Activation('relu'))
+model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2)))
+model.add(tf.keras.layers.Dropout(0.1))
+
+model.add(tf.keras.layers.Conv2D(32,(3,3), padding='same'))
+model.add(tf.keras.layers.Activation('relu'))
+model.add(tf.keras.layers.Conv2D(32,(3,3)))
+model.add(tf.keras.layers.Activation('relu'))
+model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2)))
+model.add(tf.keras.layers.Dropout(0.1))
+
+model.add(tf.keras.layers.Flatten())
+model.add(tf.keras.layers.Dense(32))
+model.add(tf.keras.layers.Activation('relu'))
+model.add(tf.keras.layers.Dropout(0.15))
+model.add(tf.keras.layers.Dense(2)) # higher か lowerを判別する2クラス分類のため2を指定
+model.add(tf.keras.layers.Activation('sigmoid'))
+
+# 層の概要（まとめ）をターミナル上に出力
+model.summary()
+
+# モデルの最適化とコンパイル
+sgd = optimizers.SGD(learning_rate=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+
+model.compile(optimizer=sgd, loss='binary_crossentropy', metrics=['accuracy'])
+
+# モデルの学習を開始する
+
+tmp = model.fit(X_train, y_train, batch_size=32, validation_split=0.1, epochs=100, callbacks = [callback])

@@ -53,7 +53,7 @@ def moving_average(x, num):
 ######
 if __name__ == "__main__":
 
-    bcg_file = "2211011154.csv"
+    bcg_file = "2211101434.csv"
 
     # BCGデータの読み込み
     bcg_data = pd.read_csv(bcg_file)
@@ -94,23 +94,28 @@ def savegraphs(a,b,c,n):
     else:  
         #上のコードによって描かれたグラフの頂点を求め、Y軸の大きさと数でヒストグラムを準備する
         peakvalue = x[peaks]
-        peakvalues = pd.DataFrame({'value':peakvalue})
+        #peakvalues = pd.DataFrame({'value':peakvalue})
         #print(peakvalues)
         
         Histgram, hist = plt.subplots()
         
         y = peakvalue
-        hist.set_xlim(-20000,20000)
-        hist.set_ylim(0,22)
+        hist.set_xlim(-4000,8000) # 横の目盛り幅設定
+        hist.set_ylim(0,80) # 縦の目盛り幅設定
+
+        hist.xaxis.set_visible(False) # 横軸の目盛りを非表示にする
+        hist.yaxis.set_visible(False) # 縦軸の目盛りを非表示にする
+        for spine in hist.spines.values():
+            spine.set_visible(False) # 周りの枠線を非表示にする
         
-        plt.hist(y, bins=50)
-        plt.savefig("Y22M11D01T1154/30sec/" + "3histgram" + c + ".png")
+        plt.hist(y, bins=10)
+        plt.savefig("Y22M11D10T1434/30sec/" + "4histgram" + c + ".png")
 
     
 #30秒間隔のヒストグラム表示 range()で出力するグラフ数（30分なら60）
 ran = 0
         
-for i in range(1):
+for i in range(90):
     savegraphs(ran+1, ran+3750, i, 0)
     ran = ran + 3750
 
